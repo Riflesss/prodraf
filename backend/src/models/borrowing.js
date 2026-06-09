@@ -1,0 +1,66 @@
+const mongoose = require('mongoose');
+
+const borrowingSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  firebaseUid: {
+    type: String,
+    required: true,
+  },
+  items: [
+    {
+      itemName: {
+        type: String,
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+      serialNumber: String,
+      condition: String,
+    },
+  ],
+  borrowDate: {
+    type: Date,
+    required: true,
+  },
+  expectedReturnDate: {
+    type: Date,
+    required: true,
+  },
+  actualReturnDate: Date,
+  reason: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'borrowed', 'returned', 'overdue'],
+    default: 'pending',
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  approvedAt: Date,
+  notes: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// Index สำหรับค้นหา
+borrowingSchema.index({ firebaseUid: 1, status: 1 });
+borrowingSchema.index({ borrowDate: -1 });
+
+module.exports = mongoose.model('Borrowing', borrowingSchema);
