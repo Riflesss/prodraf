@@ -1,17 +1,62 @@
-const express = require('express');
-const {
-  createItem,
-  getAllItems,
-  updateItem,
-  deleteItem,
-} = require('../controllers/itemController');
-const { verifyToken, checkAdmin } = require('../middleware/auth');
+const mongoose = require('mongoose');
 
-const router = express.Router();
+const borrowingSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  firebaseUid: {
+    type: String,
+    required: true,
+  },
+  items: [
+    {
+      itemName: {
+        type: String,
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+      serialNumber: String,
+      condition: String,
+    },
+  ],
+  borrowDate: {
+    type: Date,
+    required: true,
+  },
+  expectedReturnDate: {
+    type: Date,
+    required: true,
+  },
+  actualReturnDate: Date,
+  reason: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'borrowed', 'returned', 'overdue'],
+    default: 'pending',
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  approvedAt: Date,
+  notes: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-router.get('/', verifyToken, getAllItems);
-router.post('/', verifyToken, checkAdmin, createItem);
-router.put('/:id', verifyToken, checkAdmin, updateItem);
-router.delete('/:id', verifyToken, checkAdmin, deleteItem);
-
-module.exports = router;
+module.exports = mongoose.model('Borrowing', borrowingSchema);

@@ -10,16 +10,20 @@ const userRoutes = require('./routes/users');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Connect to MongoDB
 connectDB();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Routes
 app.use('/api/borrowings', borrowingRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/users', userRoutes);
 
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     success: true, 
@@ -29,14 +33,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    message: `Cannot find ${req.originalUrl} on this server` 
+  });
+});
+
+// Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err.stack);
   res.status(500).json({ 
     success: false, 
     message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🫁   เอสแดง 2 ตัวอยู่ที่ ${PORT}`);
+  console.log(`📡 API available at http://localhost:${PORT}`);
+  console.log(`❤️  Health check: http://localhost:${PORT}/health`);
 });

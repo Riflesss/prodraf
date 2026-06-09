@@ -1,17 +1,45 @@
-const express = require('express');
-const {
-  createItem,
-  getAllItems,
-  updateItem,
-  deleteItem,
-} = require('../controllers/itemController');
-const { verifyToken, checkAdmin } = require('../middleware/auth');
+const mongoose = require('mongoose');
 
-const router = express.Router();
+const itemSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  category: {
+    type: String,
+    enum: ['equipment', 'tool', 'book', 'device', 'other'],
+    default: 'other',
+  },
+  totalQuantity: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  availableQuantity: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  unit: {
+    type: String,
+    default: 'ชิ้น',
+  },
+  description: String,
+  location: String,
+  status: {
+    type: String,
+    enum: ['active', 'maintenance', 'discontinued'],
+    default: 'active',
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-router.get('/', verifyToken, getAllItems);
-router.post('/', verifyToken, checkAdmin, createItem);
-router.put('/:id', verifyToken, checkAdmin, updateItem);
-router.delete('/:id', verifyToken, checkAdmin, deleteItem);
-
-module.exports = router;
+module.exports = mongoose.model('Item', itemSchema);
