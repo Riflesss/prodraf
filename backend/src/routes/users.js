@@ -4,7 +4,6 @@ const { verifyToken, checkAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ดึงข้อมูลผู้ใช้ปัจจุบัน
 router.get('/me', verifyToken, async (req, res) => {
   try {
     res.status(200).json({ success: true, data: req.user.dbUser });
@@ -13,7 +12,6 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
-// Admin: ดึงผู้ใช้ทั้งหมด
 router.get('/', verifyToken, checkAdmin, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -23,7 +21,6 @@ router.get('/', verifyToken, checkAdmin, async (req, res) => {
   }
 });
 
-// Admin: อัปเดตบทบาทผู้ใช้
 router.put('/:id/role', verifyToken, checkAdmin, async (req, res) => {
   try {
     const { role } = req.body;

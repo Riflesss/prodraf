@@ -1,15 +1,12 @@
 const Borrowing = require('../models/Borrowing');
 const Item = require('../models/Item');
-const User = require('../models/User');
 
-// สร้างคำขอยืม
 const createBorrowRequest = async (req, res) => {
   try {
     const { items, borrowDate, expectedReturnDate, reason } = req.body;
     const { firebaseUid } = req.user;
     const user = req.user.dbUser;
 
-    // ตรวจสอบจำนวนของที่ยืม
     for (const item of items) {
       const dbItem = await Item.findOne({ name: item.itemName });
       if (dbItem && dbItem.availableQuantity < item.quantity) {
@@ -40,71 +37,38 @@ const createBorrowRequest = async (req, res) => {
   }
 };
 
-// ดึงรายการยืมของผู้ใช้
 const getUserBorrowings = async (req, res) => {
   try {
     const { firebaseUid } = req.user;
-    const { status, page = 1, limit = 10 } = req.query;
-    
-    const query = { firebaseUid };
-    if (status) query.status = status;
-    
-    const borrowings = await Borrowing.find(query)
+    const borrowings = await Borrowing.find({ firebaseUid })
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
       .populate('approvedBy', 'displayName email');
-    
-    const total = await Borrowing.countDocuments(query);
     
     res.status(200).json({
       success: true,
       data: borrowings,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-// Admin: ดึงคำขอยืมทั้งหมด
 const getAllBorrowings = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-    
-    const query = {};
-    if (status) query.status = status;
-    
-    const borrowings = await Borrowing.find(query)
+    const borrowings = await Borrowing.find()
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
       .populate('userId', 'displayName email phone department')
       .populate('approvedBy', 'displayName email');
     
-    const total = await Borrowing.countDocuments(query);
-    
     res.status(200).json({
       success: true,
       data: borrowings,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit),
-      },
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-// Admin: อนุมัติ/ปฏิเสธคำขอยืม
 const updateBorrowStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -116,7 +80,6 @@ const updateBorrowStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'ไม่พบคำขอยืม' });
     }
     
-    // อัปเดตจำนวนสินค้าคงเหลือเมื่ออนุมัติ
     if (status === 'approved' && borrowing.status === 'pending') {
       for (const item of borrowing.items) {
         const dbItem = await Item.findOne({ name: item.itemName });
@@ -138,7 +101,6 @@ const updateBorrowStatus = async (req, res) => {
       borrowing.status = 'rejected';
       borrowing.notes = notes;
     } else if (status === 'returned') {
-      // คืนสินค้า
       for (const item of borrowing.items) {
         const dbItem = await Item.findOne({ name: item.itemName });
         if (dbItem) {

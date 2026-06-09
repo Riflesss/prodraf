@@ -1,6 +1,5 @@
 const Item = require('../models/Item');
 
-// สร้างสินค้าใหม่
 const createItem = async (req, res) => {
   try {
     const item = await Item.create(req.body);
@@ -10,26 +9,15 @@ const createItem = async (req, res) => {
   }
 };
 
-// ดึงรายการสินค้าทั้งหมด
 const getAllItems = async (req, res) => {
   try {
-    const { category, status, search } = req.query;
-    const query = {};
-    
-    if (category) query.category = category;
-    if (status) query.status = status;
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
-    }
-    
-    const items = await Item.find(query).sort({ createdAt: -1 });
+    const items = await Item.find().sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: items });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-// อัปเดตสินค้า
 const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
@@ -43,7 +31,6 @@ const updateItem = async (req, res) => {
   }
 };
 
-// ลบสินค้า
 const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;

@@ -10,20 +10,16 @@ const userRoutes = require('./routes/users');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB
 connectDB();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
 app.use('/api/borrowings', borrowingRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/users', userRoutes);
 
-// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     success: true, 
@@ -33,17 +29,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
     success: false, 
     message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 MongoDB: ${process.env.MONGODB_URI}`);
 });

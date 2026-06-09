@@ -1,66 +1,17 @@
-const mongoose = require('mongoose');
+const express = require('express');
+const {
+  createItem,
+  getAllItems,
+  updateItem,
+  deleteItem,
+} = require('../controllers/itemController');
+const { verifyToken, checkAdmin } = require('../middleware/auth');
 
-const borrowingSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  firebaseUid: {
-    type: String,
-    required: true,
-  },
-  items: [
-    {
-      itemName: {
-        type: String,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-        min: 1,
-      },
-      serialNumber: String,
-      condition: String,
-    },
-  ],
-  borrowDate: {
-    type: Date,
-    required: true,
-  },
-  expectedReturnDate: {
-    type: Date,
-    required: true,
-  },
-  actualReturnDate: Date,
-  reason: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected', 'borrowed', 'returned', 'overdue'],
-    default: 'pending',
-  },
-  approvedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  approvedAt: Date,
-  notes: String,
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+const router = express.Router();
 
-// Index สำหรับค้นหา
-borrowingSchema.index({ firebaseUid: 1, status: 1 });
-borrowingSchema.index({ borrowDate: -1 });
+router.get('/', verifyToken, getAllItems);
+router.post('/', verifyToken, checkAdmin, createItem);
+router.put('/:id', verifyToken, checkAdmin, updateItem);
+router.delete('/:id', verifyToken, checkAdmin, deleteItem);
 
-module.exports = mongoose.model('Borrowing', borrowingSchema);
+module.exports = router;
