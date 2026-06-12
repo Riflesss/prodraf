@@ -6,6 +6,7 @@ const connectDB = require('./config/database');
 const borrowingRoutes = require('./routes/borrowing');
 const itemRoutes = require('./routes/items');
 const userRoutes = require('./routes/users');
+const logRoutes = require('./routes/logs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/borrowings', borrowingRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/logs', logRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -17,21 +17,44 @@ const verifyToken = async (req, res, next) => {
       decodedToken = await auth.verifyIdToken(token);
     } catch (error) {
       // Mock token for testing
-      if (token === 'mock-token') {
-        decodedToken = { uid: 'mock-uid', email: 'test@example.com' };
+      if (token === 'mock-admin-token') {
+        decodedToken = { uid: 'mock-admin-uid', email: 'admin@example.com', name: 'Test Admin' };
+      } else if (token === 'mock-token' || token === 'test-token') {
+        decodedToken = { uid: 'mock-uid', email: 'test@example.com', name: 'Test User' };
       } else {
         throw error;
       }
     }
     
-    let user = await User.findOne({ firebaseUid: decodedToken.uid });
+    // Find user by either firebaseUid or email to avoid duplicate key violations
+    let user = await User.findOne({ 
+      $or: [
+        { firebaseUid: decodedToken.uid },
+        { email: decodedToken.email }
+      ]
+    });
     
     if (!user) {
       user = await User.create({
         firebaseUid: decodedToken.uid,
         email: decodedToken.email,
         displayName: decodedToken.name || decodedToken.email,
+        role: decodedToken.email.includes('admin') ? 'admin' : 'user',
       });
+    } else {
+      // Sync firebaseUid if found by email, and ensure admin roles are synced
+      let updated = false;
+      if (user.firebaseUid !== decodedToken.uid) {
+        user.firebaseUid = decodedToken.uid;
+        updated = true;
+      }
+      if (decodedToken.email.includes('admin') && user.role !== 'admin') {
+        user.role = 'admin';
+        updated = true;
+      }
+      if (updated) {
+        await user.save();
+      }
     }
     
     req.user = {
